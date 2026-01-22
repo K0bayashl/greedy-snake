@@ -1,0 +1,18 @@
+{
+  "hooks": {
+    "user-prompt-submit": {
+      "command": "git status -sb 2>nul || echo '∓ 未暂存的更改'",
+      "enabled": true
+    }
+  },
+  "permissions": {
+    "bash": {
+      "allowedPrompts": [
+        "查看文件",
+        "列出目录",
+        "运行 Git 命令",
+        "读取文件内容"
+      ]
+    }
+  }
+}
