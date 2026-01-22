@@ -297,13 +297,21 @@ Claude Code 是 Anthropic 官方的 AI 编程助手，可以：
 ### 文件结构
 ```
 greedy-snake/
-├── index.html        # 页面结构
-├── style.css         # 样式设计
-├── game.js           # 游戏逻辑
-├── learning.md       # 学习笔记（本文件）
-├── hooks-guide.md    # Hooks 使用指南
+├── index.html         # 页面结构
+├── style.css          # 样式设计
+├── game.js            # 游戏逻辑
+├── learning.md        # 学习笔记（本文件）
+├── features.md        # 功能说明文档
+├── hooks-guide.md     # Hooks 使用指南
+├── subagent-guide.md  # SubAgent 使用指南
 └── .claude/
-    └── settings.json # Claude Code 配置
+    ├── settings.json  # Claude Code 配置
+    └── agents/        # 自定义 Agent 定义
+        ├── developer.md
+        ├── reviewer.md
+        ├── designer.md
+        ├── tester.md
+        └── doc-writer.md
 ```
 
 ### 已实现功能
@@ -313,6 +321,8 @@ greedy-snake/
 - ✅ 游戏时长统计
 - ✅ 暂停/继续
 - ✅ 重新开始
+- ✅ 难度选择（简单/普通/困难）
+- ✅ 双倍分数食物（金色食物，限时6秒，闪烁动画）
 
 ### 运行方式
 ```bash
@@ -387,7 +397,157 @@ C:\workspace4idea\greedy-snake\greedy-snake\index.html
 
 ---
 
-**最后更新**：2026-01-22
-**当前进度**：第3课完成（Hooks 自动化），准备进入第4课
+---
 
-**下一步**：学习 SubAgents - AI 角色工程化
+## 📖 第4课：SubAgents（已完成）
+
+### 什么是 SubAgent？
+
+SubAgent 是具有独立上下文和特定职责的 AI 代理。它们可以：
+- 🧠 **独立思考** - 有独立的上下文和记忆
+- 🎯 **专业分工** - 每个代理专注特定领域
+- 🔒 **权限隔离** - 只能访问配置的工具
+- 📋 **自定义行为** - 通过系统提示词定制
+
+### 内置 Agent 类型
+
+| Agent | 用途 | 工具权限 |
+|-------|------|----------|
+| `Explore` | 快速探索代码库 | 所有工具（除Task/ExitPlanMode） |
+| `Plan` | 制定实施计划 | 所有工具（除Task/ExitPlanMode） |
+| `Bash` | 执行命令专家 | Bash |
+| `general-purpose` | 通用代理 | 全部工具 |
+| `claude-code-guide` | Claude Code 帮助 | Glob, Grep, Read, WebFetch, WebSearch |
+
+### 自定义 SubAgent
+
+#### 创建位置
+```
+项目级：{project}/.claude/agents/{name}.md
+用户级：~/.claude/agents/{name}.md
+```
+
+#### 文件格式
+```markdown
+---
+name: developer
+description: 开发工程师 - 实现新功能、重构代码
+tools:
+  - Read
+  - Edit
+  - Write
+  - Bash
+permissionMode: full
+model: sonnet
+---
+
+# 开发工程师
+
+你是一位专注于...（系统提示词内容）
+```
+
+#### YAML 字段说明
+
+| 字段 | 说明 |
+|------|------|
+| `name` | Agent 标识符（调用时使用） |
+| `description` | 简短描述 |
+| `tools` | 允许使用的工具列表 |
+| `permissionMode` | `readonly` 或 `full` |
+| `model` | 使用的模型（`sonnet`/`opus`/`haiku`） |
+
+### 调用方式
+
+#### 方式1：自然语言描述
+```
+"让 developer 帮我添加道具系统"
+"请 reviewer 审查一下 game.js"
+```
+
+#### 方式2：使用 Task 工具
+```
+Task(
+  subagent_type="developer",
+  prompt="添加道具功能"
+)
+```
+
+### 上下文隔离机制
+
+```
+主对话
+  │
+  ├─> 调用 developer agent
+  │     │
+  │     └─> 独立上下文处理任务
+  │           │
+  │           └─> 返回结果给主对话
+  │
+  └─> 主对话只看到最终结果
+```
+
+**关键特性**：
+- ✅ 每个 Agent 有独立的 token 预算
+- ✅ 完成后只返回结果摘要
+- ✅ 不会污染主对话的上下文
+- ✅ 可通过 `agentId` 恢复之前的会话
+
+### 实战：创建项目专属 Agent
+
+#### 已创建的 5 个 Agent
+
+| Agent | 文件 | 职责 |
+|-------|------|------|
+| `developer` | developer.md | 实现新功能、重构代码 |
+| `reviewer` | reviewer.md | 代码审查、质量检查 |
+| `designer` | designer.md | 设计玩法、优化体验 |
+| `tester` | tester.md | 功能测试、发现 Bug |
+| `doc-writer` | doc-writer.md | 维护文档、编写说明 |
+
+#### 目录结构
+```
+.claude/
+├── settings.json
+└── agents/
+    ├── developer.md
+    ├── reviewer.md
+    ├── designer.md
+    ├── tester.md
+    └── doc-writer.md
+```
+
+### 实战完成
+
+✅ 已创建 5 个自定义 SubAgent
+✅ 验证所有 Agent 可正常调用
+✅ 理解上下文隔离机制
+✅ 已创建 `subagent-guide.md` 详细指南
+⚠️ **注意**：创建新 Agent 后需要重启 Claude Code
+
+---
+
+## 🎓 待学习内容预告
+
+### 第5课：Skills
+- 创建自定义技能
+- 标准化操作流程
+- 复用常见任务
+
+### 第6课：MCP (Model Context Protocol)
+- 连接数据库
+- 调用外部 API
+- 集成第三方服务
+
+### 第7课：系统提示词
+- 自定义 AI 行为
+- 创建项目特定规则
+- 优化 AI 响应
+
+---
+
+**最后更新**：2026-01-22
+**当前进度**：第4课完成（SubAgents），游戏功能持续完善中
+
+**最新功能**：双倍分数食物系统 - 金色限时食物，增加游戏趣味性
+
+**下一步**：学习 Skills - 创建自定义技能流程

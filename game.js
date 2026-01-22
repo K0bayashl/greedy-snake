@@ -22,6 +22,17 @@ let startTime = 0;
 let playTime = 0;
 let currentDifficulty = 'easy';
 
+// 特殊食物（双倍分数）
+let bonusFood = null; // 双倍食物对象 {x, y, spawnTime}
+const BONUS_FOOD_DURATION = 6000; // 双倍食物存在时间（毫秒）
+const BONUS_FOOD_SCORE = 20; // 双倍食物得分
+const BONUS_FOOD_SPAWN_CHANCE = 0.3; // 生成双倍食物的概率
+const BONUS_FOOD_RESPAWN_MIN_DELAY = 2000; // 双倍食物重生最小延迟（毫秒）
+const BONUS_FOOD_RESPAWN_MAX_DELAY = 5000; // 双倍食物重生最大延迟（毫秒）
+let bonusFoodCheckInterval = null; // 检查双倍食物超时的定时器
+let bonusFoodRespawnTimeout = null; // 双倍食物重生延迟定时器
+let bonusFoodPauseTime = 0; // 记录双倍食物暂停时的时间戳
+
 // 初始化游戏
 function init() {
     canvas = document.getElementById('gameCanvas');
@@ -76,12 +87,35 @@ function resetGame() {
     score = 0;
     updateScore();
     generateFood();
+
+    // 清除双倍食物相关定时器和状态
+    if (bonusFoodCheckInterval) {
+        clearInterval(bonusFoodCheckInterval);
+        bonusFoodCheckInterval = null;
+    }
+    if (bonusFoodRespawnTimeout) {
+        clearTimeout(bonusFoodRespawnTimeout);
+        bonusFoodRespawnTimeout = null;
+    }
+    bonusFood = null;
+    bonusFoodPauseTime = 0;
+
     draw();
 }
 
 // 开始游戏
 function startGame() {
     if (!isPlaying) {
+        // 清理旧的定时器
+        if (bonusFoodCheckInterval) {
+            clearInterval(bonusFoodCheckInterval);
+            bonusFoodCheckInterval = null;
+        }
+        if (bonusFoodRespawnTimeout) {
+            clearTimeout(bonusFoodRespawnTimeout);
+            bonusFoodRespawnTimeout = null;
+        }
+
         isPlaying = true;
         isPaused = false;
         startTime = Date.now();
@@ -95,10 +129,37 @@ function togglePause() {
 
     isPaused = !isPaused;
     if (isPaused) {
+        // 暂停游戏循环
         clearInterval(gameLoop);
+
+        // 暂停双倍食物检查定时器
+        if (bonusFoodCheckInterval) {
+            clearInterval(bonusFoodCheckInterval);
+            bonusFoodCheckInterval = null;
+        }
+
+        // 记录暂停时间（如果有双倍食物）
+        if (bonusFood) {
+            bonusFoodPauseTime = Date.now();
+        }
+
         document.getElementById('pauseBtn').textContent = '继续';
     } else {
+        // 恢复游戏循环
         gameLoop = setInterval(update, DIFFICULTY[currentDifficulty].speed);
+
+        // 恢复双倍食物检查定时器
+        if (bonusFood) {
+            // 调整 spawnTime 以补偿暂停时间
+            const pausedDuration = Date.now() - bonusFoodPauseTime;
+            bonusFood.spawnTime += pausedDuration;
+
+            // 重新启动检查定时器
+            if (!bonusFoodCheckInterval) {
+                bonusFoodCheckInterval = setInterval(checkBonusFoodTimeout, 500);
+            }
+        }
+
         document.getElementById('pauseBtn').textContent = '暂停';
     }
 }
@@ -137,6 +198,61 @@ function generateFood() {
             return;
         }
     }
+
+    // 30%概率生成双倍食物（如果当前没有双倍食物）
+    if (!bonusFood && Math.random() < BONUS_FOOD_SPAWN_CHANCE) {
+        generateBonusFood();
+    }
+}
+
+// 生成双倍食物
+function generateBonusFood() {
+    let newBonusFood = {
+        x: Math.floor(Math.random() * GRID_SIZE),
+        y: Math.floor(Math.random() * GRID_SIZE),
+        spawnTime: Date.now()
+    };
+
+    // 确保双倍食物不在普通食物位置
+    if (newBonusFood.x === food.x && newBonusFood.y === food.y) {
+        generateBonusFood();
+        return;
+    }
+
+    // 确保双倍食物不在蛇身上
+    for (let segment of snake) {
+        if (segment.x === newBonusFood.x && segment.y === newBonusFood.y) {
+            generateBonusFood();
+            return;
+        }
+    }
+
+    bonusFood = newBonusFood;
+
+    // 启动检查双倍食物超时的定时器
+    if (!bonusFoodCheckInterval) {
+        bonusFoodCheckInterval = setInterval(checkBonusFoodTimeout, 500);
+    }
+}
+
+// 检查双倍食物是否超时
+function checkBonusFoodTimeout() {
+    if (bonusFood && Date.now() - bonusFood.spawnTime > BONUS_FOOD_DURATION) {
+        bonusFood = null;
+        clearInterval(bonusFoodCheckInterval);
+        bonusFoodCheckInterval = null;
+
+        // 超时后尝试重新生成双倍食物
+        if (isPlaying && !isPaused) {
+            const respawnDelay = Math.random() * (BONUS_FOOD_RESPAWN_MAX_DELAY - BONUS_FOOD_RESPAWN_MIN_DELAY) + BONUS_FOOD_RESPAWN_MIN_DELAY;
+            bonusFoodRespawnTimeout = setTimeout(() => {
+                if (isPlaying && !isPaused && !bonusFood) {
+                    generateBonusFood();
+                }
+                bonusFoodRespawnTimeout = null;
+            }, respawnDelay);
+        }
+    }
 }
 
 // 更新游戏状态
@@ -157,9 +273,24 @@ function update() {
 
     snake.unshift(head);
 
-    // 检查是否吃到食物
+    let ateFood = false;
+
+    // 检查是否吃到普通食物
     if (head.x === food.x && head.y === food.y) {
         score += 10;
+        ateFood = true;
+    }
+
+    // 检查是否吃到双倍食物
+    if (bonusFood && head.x === bonusFood.x && head.y === bonusFood.y) {
+        score += BONUS_FOOD_SCORE;
+        bonusFood = null;
+        clearInterval(bonusFoodCheckInterval);
+        bonusFoodCheckInterval = null;
+        ateFood = true;
+    }
+
+    if (ateFood) {
         updateScore();
         generateFood();
     } else {
@@ -189,6 +320,14 @@ function checkCollision(head) {
 // 游戏结束
 function gameOver() {
     clearInterval(gameLoop);
+    if (bonusFoodCheckInterval) {
+        clearInterval(bonusFoodCheckInterval);
+        bonusFoodCheckInterval = null;
+    }
+    if (bonusFoodRespawnTimeout) {
+        clearTimeout(bonusFoodRespawnTimeout);
+        bonusFoodRespawnTimeout = null;
+    }
     isPlaying = false;
     isPaused = false;
     document.getElementById('pauseBtn').textContent = '暂停';
@@ -245,7 +384,7 @@ function draw() {
         );
     });
 
-    // 绘制食物
+    // 绘制普通食物
     ctx.fillStyle = '#FF5722';
     ctx.beginPath();
     ctx.arc(
@@ -256,6 +395,66 @@ function draw() {
         Math.PI * 2
     );
     ctx.fill();
+
+    // 绘制双倍食物（金色，带闪烁效果）
+    if (bonusFood) {
+        drawBonusFood();
+    }
+}
+
+// 绘制双倍食物
+function drawBonusFood() {
+    // 计算闪烁透明度（基于时间产生呼吸效果）
+    const time = Date.now();
+    const blinkPhase = Math.sin(time / 150) * 0.5 + 0.5; // 0到1之间变化
+    const alpha = 0.6 + blinkPhase * 0.4; // 透明度在0.6-1.0之间变化
+
+    // 绘制光晕效果
+    ctx.beginPath();
+    ctx.arc(
+        bonusFood.x * CELL_SIZE + CELL_SIZE / 2,
+        bonusFood.y * CELL_SIZE + CELL_SIZE / 2,
+        CELL_SIZE / 2 + 3,
+        0,
+        Math.PI * 2
+    );
+    ctx.fillStyle = `rgba(255, 215, 0, ${alpha * 0.3})`;
+    ctx.fill();
+
+    // 绘制双倍食物主体
+    ctx.beginPath();
+    ctx.arc(
+        bonusFood.x * CELL_SIZE + CELL_SIZE / 2,
+        bonusFood.y * CELL_SIZE + CELL_SIZE / 2,
+        CELL_SIZE / 2 - 2,
+        0,
+        Math.PI * 2
+    );
+    ctx.fillStyle = `rgba(255, 215, 0, ${alpha})`;
+    ctx.fill();
+
+    // 绘制内圈高光
+    ctx.beginPath();
+    ctx.arc(
+        bonusFood.x * CELL_SIZE + CELL_SIZE / 2 - 2,
+        bonusFood.y * CELL_SIZE + CELL_SIZE / 2 - 2,
+        CELL_SIZE / 4,
+        0,
+        Math.PI * 2
+    );
+    ctx.fillStyle = `rgba(255, 255, 200, ${alpha * 0.8})`;
+    ctx.fill();
+
+    // 绘制"2x"文字标识
+    ctx.fillStyle = `rgba(184, 134, 11, ${alpha})`;
+    ctx.font = 'bold 10px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(
+        '2x',
+        bonusFood.x * CELL_SIZE + CELL_SIZE / 2,
+        bonusFood.y * CELL_SIZE + CELL_SIZE / 2
+    );
 }
 
 // 页面加载完成后初始化
