@@ -177,6 +177,76 @@ Task(subagent_type="claude-code-guide", prompt="如何配置 hooks?")
 
 ---
 
+## ⚙️ 配置详解
+
+### 基本配置
+
+| 配置项 | 说明 |
+|--------|------|
+| 文件位置 | `.claude/agents/{name}.md` |
+| 重启要求 | ⚠️ **必须重启** Claude Code |
+| 生效时机 | 重启后生效 |
+
+### 配置结构
+
+**⚠️ 重点**：SubAgent 文件必须有 YAML frontmatter
+
+```markdown
+---
+name: agent-name
+description: 简短描述
+tools:
+  - Read
+  - Edit
+  - Write
+permissionMode: full
+model: sonnet
+---
+
+# 系统提示词内容
+...
+```
+
+### YAML 字段说明
+
+| 字段 | 必填 | 说明 | 可选值 |
+|------|------|------|--------|
+| `name` | ✅ | Agent 标识符 | 任意字符串 |
+| `description` | ✅ | 简短描述 | 任意字符串 |
+| `tools` | ❌ | 允许使用的工具 | Read, Edit, Write, Bash, Grep, Glob... |
+| `permissionMode` | ❌ | 权限模式 | `readonly`, `full` |
+| `model` | ❌ | 使用的模型 | `sonnet`, `opus`, `haiku` |
+
+### 目录结构
+
+```
+.claude/
+├── agents/
+│   ├── developer.md
+│   ├── reviewer.md
+│   ├── designer.md
+│   ├── tester.md
+│   └── doc-writer.md
+```
+
+### 调用方式
+
+```
+# 方式1：自然语言
+"让 developer 帮我添加功能"
+
+# 方式2：Task 工具
+Task(subagent_type="developer", prompt="添加功能")
+```
+
+### 常见问题
+
+| 问题 | 解决方案 |
+|------|----------|
+| Agent not found | ⚠️ 重启 Claude Code |
+| Agent 没有执行 | 检查 `name` 字段是否与调用名称一致 |
+| 权限错误 | 检查 `permissionMode` 和 `tools` 配置 |
+
 ## 🚀 创建自定义 Agent
 
 ### 步骤 1：确定需求

@@ -1,7 +1,12 @@
 {
   "hooks": {
     "user-prompt-submit": {
-      "command": "git status -sb 2>nul || echo '∓ 未暂存的更改'",
+      "command": "git status -sb 2>/dev/null || echo '不在 Git 仓库中'",
+      "enabled": true
+    },
+    "edit-file": {
+      "command": "echo '✅ 文件已修改: {{file_path}}'"
+    ,
       "enabled": true
     }
   },
@@ -9,9 +14,8 @@
     "bash": {
       "allowedPrompts": [
         "查看文件",
-        "列出目录",
-        "运行 Git 命令",
-        "读取文件内容"
+        "运行测试",
+        "构建项目"
       ]
     }
   }

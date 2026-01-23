@@ -142,6 +142,65 @@ Hooks 命令中可以使用以下变量：
 }
 ```
 
+## ⚙️ 配置详解
+
+### 基本配置
+
+| 配置项 | 说明 |
+|--------|------|
+| 文件位置 | `.claude/settings.json` |
+| 重启要求 | ❌ 不需要重启 |
+| 生效时机 | 修改后立即生效 |
+
+### 配置结构
+
+```json
+{
+  "hooks": {
+    "user-prompt-submit": {
+      "command": "命令内容",
+      "enabled": true
+    },
+    "edit-file": {
+      "command": "命令内容",
+      "enabled": true
+    },
+    "bash": {
+      "command": "命令内容",
+      "enabled": true
+    }
+  }
+}
+```
+
+### 可用变量
+
+| 变量 | 说明 | 示例 |
+|------|------|------|
+| `{{file_path}}` | 文件路径 | `C:\project\src\game.js` |
+| `{{bash_command}}` | Bash 命令 | `git status` |
+| `{{user_prompt}}` | 用户输入 | 用户发送的消息内容 |
+
+### Windows 兼容性
+
+**⚠️ 重点**：Windows 系统需要特殊处理
+
+```bash
+# 错误写法（Windows 会失败）
+"command": "git status 2>/dev/null"
+
+# 正确写法
+"command": "git status -sb 2>nul"
+```
+
+### 常见问题
+
+| 问题 | 解决方案 |
+|------|----------|
+| Hook 没有执行 | 检查 `enabled` 是否为 `true` |
+| 命令报错 | 检查 Windows 命令兼容性 |
+| 变量不生效 | 确保变量名正确，用 `{{}}` 包裹 |
+
 ## 🚫 Hook 失败处理
 
 如果 Hook 命令返回非零退出码：
