@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2048 游戏</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>2048</h1>
+      <div class="header-right">
+        <div class="theme-switcher">
+          <button class="theme-btn theme-light active" data-theme="light" title="原色主题"></button>
+          <button class="theme-btn theme-dark" data-theme="dark" title="暗黑主题"></button>
+          <button class="theme-btn theme-neon" data-theme="neon" title="霓虹主题"></button>
+        </div>
+        <button class="settings-btn" id="settings-btn" title="设置">
+          <span class="settings-icon">⚙</span>
+        </button>
+        <div class="scores">
+          <div class="score-box">
+            <span class="score-label">得分</span>
+            <span class="score-value" id="current-score">0</span>
+          </div>
+          <div class="score-box">
+            <span class="score-label">最高分</span>
+            <span class="score-value" id="best-score">0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn" id="new-game-btn">新游戏</button>
+      <button class="btn" id="undo-btn">撤销</button>
+    </div>
+
+    <div class="game-container">
+      <div class="grid-container" id="grid-container">
+        <!-- 背景网格 -->
+        <div class="grid-background">
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+          <div class="grid-cell"></div>
+        </div>
+        <!-- 游戏方块 -->
+        <div class="tile-container" id="tile-container"></div>
+      </div>
+    </div>
+
+    <div class="instructions">
+      <p>使用方向键或滑动屏幕移动方块</p>
+      <p>相同数字的方块会合并</p>
+    </div>
+
+    <!-- 游戏结束弹窗 -->
+    <div class="game-message" id="game-message">
+      <div class="message-content">
+        <p class="message-text" id="message-text">游戏结束</p>
+        <button class="btn" id="try-again-btn">再试一次</button>
+      </div>
+    </div>
+
+    <!-- 设置面板 -->
+    <div class="settings-panel" id="settings-panel">
+      <div class="settings-overlay"></div>
+      <div class="settings-content">
+        <div class="settings-header">
+          <h3>游戏设置</h3>
+          <button class="settings-close" id="settings-close">&times;</button>
+        </div>
+        <div class="settings-body">
+          <div class="setting-item">
+            <label class="setting-label">皮肤样式</label>
+            <div class="skin-options">
+              <button class="skin-btn active" data-skin="default">🔢 默认</button>
+              <button class="skin-btn" data-skin="pixel">👾 像素</button>
+              <button class="skin-btn" data-skin="dog-evolution">🐶 狗狗</button>
+            </div>
+          </div>
+          <div class="setting-item">
+            <label class="setting-label">粒子密度</label>
+            <div class="setting-options">
+              <button class="option-btn" data-density="low">低</button>
+              <button class="option-btn active" data-density="medium">中</button>
+              <button class="option-btn" data-density="high">高</button>
+            </div>
+          </div>
+          <div class="setting-item">
+            <label class="setting-label">粒子效果</label>
+            <label class="toggle-switch">
+              <input type="checkbox" id="particle-toggle" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="setting-item">
+            <label class="setting-label">震动反馈</label>
+            <label class="toggle-switch">
+              <input type="checkbox" id="vibration-toggle" checked>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 粒子容器 -->
+  <div class="particle-container" id="particle-container"></div>
+
+  <script src="game.js"></script>
+</body>
+</html>
