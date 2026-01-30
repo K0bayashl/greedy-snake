@@ -9,6 +9,7 @@
 - [x] 第5课：Skills 标准操作流程
 - [x] 第6课：MCP 连接外部真实系统
 - [x] 第7课：Output Styles（系统提示词）
+- [x] 第8课：多游戏项目管理
 
 ---
 
@@ -1274,7 +1275,7 @@ keep-coding-instructions: true
 
 ---
 
-## 🎓 七门课全部完成！
+## 🎓 八门课全部完成！
 
 你现在掌握的 Claude Code 技能：
 
@@ -1287,7 +1288,8 @@ keep-coding-instructions: true
 | 第5课 | Skills 标准流程 | ✅ |
 | 第6课 | MCP 外部连接 | ✅ |
 | 第7课 | Output Styles | ✅ |
-| **综合** | 七门课串联 | ✅ |
+| 第8课 | 多游戏项目管理 | ✅ |
+| **综合** | 八门课串联 | ✅ |
 
 ---
 
@@ -1335,32 +1337,87 @@ keep-coding-instructions: true
 
 ## 📦 当前项目信息
 
-### 项目名称：贪吃蛇游戏
+### 项目名称：贪吃蛇游戏 + 数字跑酷游戏
 
-### 技术栈
-- 纯前端（HTML + CSS + JavaScript）
-- Canvas API 绘图
-- LocalStorage 存储最高分
+### 游戏列表
+
+#### 1. 贪吃蛇游戏
+- **路径**：`src/greedy-snake/`
+- **技术栈**：纯前端（HTML + CSS + JavaScript）
+- **特性**：Canvas API 绘图，LocalStorage 存储最高分
+- **状态**：功能完整
+
+#### 2. 数字跑酷游戏
+- **路径**：`src/number-parkour/`
+- **技术栈**：纯前端（HTML + CSS + JavaScript）
+- **特性**：竖版跑酷，运算系统，关卡系统
+- **状态**：功能完整
+
+#### 3. 2048 游戏
+- **路径**：`src/2048/`
+- **技术栈**：纯前端（HTML + CSS + JavaScript）
+- **特性**：数字合并益智游戏，撤销功能，动画效果，视觉特效系统
+- **状态**：文档已创建，视觉特效系统已完成
+
+**视觉特效系统**（2026-01-28 完成）：
+- 三套主题切换（原色/暗黑/霓虹）
+- 粒子爆炸效果（合并时触发，三档密度可调）
+- 震动反馈（移动/合并/胜利/失败）
+- 设置面板（粒子密度和开关控制）
+- 四个管理器类：ThemeManager、ParticleSystem、EffectsManager、SettingsManager
+
+**像素皮肤系统**（2026-01-28 完成）：
+- 双皮肤模式（默认/像素）
+- Canvas动态绘制像素数字（5x7点阵字体）
+- 三套主题完美兼容（自动颜色适配）
+- 智能缓存机制（像素图缓存、主题切换自动清除）
+- 设置面板集成（皮肤选择器）
+- TileSkinManager类统一管理皮肤逻辑
 
 ### 文件结构
 ```
 greedy-snake/
-├── index.html         # 页面结构
-├── style.css          # 样式设计
-├── game.js            # 游戏逻辑
-├── learning.md        # 学习笔记（本文件）
-├── features.md        # 功能说明文档
-├── hooks-guide.md     # Hooks 使用指南
-├── subagent-guide.md  # SubAgent 使用指南
+├── src/
+│   ├── greedy-snake/        # 贪吃蛇游戏
+│   │   ├── index.html
+│   │   ├── style.css
+│   │   └── game.js
+│   ├── number-parkour/      # 数字跑酷游戏
+│   │   ├── index.html
+│   │   ├── style.css
+│   │   └── game.js
+│   └── 2048/                # 2048游戏
+│       ├── index.html
+│       ├── style.css
+│       └── game.js
+├── docs/
+│   ├── guides/
+│   │   └── learning.md      # 学习笔记（本文件）
+│   ├── greedy-snake/        # 贪吃蛇文档
+│   │   ├── features.md
+│   │   ├── cartoon-face-test-report.md
+│   │   └── test-summary.md
+│   ├── number-parkour/      # 数字跑酷文档
+│   │   └── difficulty-system-update.md
+│   └── 2048/                # 2048文档
+│       ├── README.md
+│       ├── design.md
+│       ├── test-report.md
+│       ├── effects/         # 视觉特效系统文档
+│       │   ├── README.md
+│       │   └── design.md
+│       └── pixel-skin/      # 像素皮肤系统文档
+│           ├── README.md
+│           └── design.md
 └── .claude/
-    ├── settings.json  # Claude Code 配置
-    ├── agents/        # 自定义 Agent 定义
+    ├── settings.json        # Claude Code 配置
+    ├── agents/              # 自定义 Agent 定义
     │   ├── developer.md
     │   ├── reviewer.md
     │   ├── designer.md
     │   ├── tester.md
     │   └── doc-writer.md
-    └── skills/        # 自定义 Skills 定义
+    └── skills/              # 自定义 Skills 定义
         ├── code-reviewer/
         │   └── SKILL.md
         ├── change-summary/
@@ -1370,6 +1427,8 @@ greedy-snake/
 ```
 
 ### 已实现功能
+
+#### 贪吃蛇游戏
 - ✅ 基础游戏逻辑（移动、吃食物、碰撞检测）
 - ✅ 得分系统
 - ✅ 最高分记录（LocalStorage）
@@ -1382,14 +1441,247 @@ greedy-snake/
 - ✅ 无敌道具（蓝色星星，5秒无敌，穿墙+避障）
 - ✅ 卡通外观系统（搞怪滑稽表情，圆形渐变蛇身）
 
+#### 数字跑酷游戏
+- ✅ 竖版双通道跑酷玩法
+- ✅ 空格/点击切换通道
+- ✅ 运算护栏系统（+ - × ÷）
+- ✅ 数字障碍物突破机制
+- ✅ 3个关卡（2000m/5000m/10000m）
+- ✅ 动态平衡算法
+- ✅ 加权随机运算生成
+- ✅ 移动中碰撞检测
+- ✅ 浮动文字反馈
+- ✅ 进度条显示
+- ✅ 独立最高分存储（key: 'parkourHighScore'）
+- ✅ 护栏和障碍物循序渐进难度系统
+
 ### 运行方式
 ```bash
-# 在命令行执行
-start index.html
+# 贪吃蛇游戏
+start src/greedy-snake/index.html
 
-# 或直接用浏览器打开
-C:\workspace4idea\greedy-snake\greedy-snake\index.html
+# 数字跑酷游戏
+start src/number-parkour/index.html
 ```
+
+---
+
+## 📖 第8课：多游戏项目管理
+
+### 项目扩展
+
+从单一游戏扩展到多游戏项目，关键在于：
+
+#### 1. 目录结构分离
+```
+src/
+├── greedy-snake/    # 贪吃蛇
+└── number-parkour/  # 数字跑酷
+```
+
+每个游戏有独立的：
+- HTML 入口文件
+- CSS 样式文件
+- JS 游戏逻辑
+
+#### 2. 数据隔离
+- 贪吃蛇：`localStorage.getItem('snakeHighScore')`
+- 数字跑酷：`localStorage.getItem('parkourHighScore')`
+
+#### 3. 技术栈复用
+- 两个游戏都使用 Canvas API
+- 都使用 requestAnimationFrame 实现游戏循环
+- 都使用 LocalStorage 存储数据
+
+### 数字跑酷游戏核心技术
+
+#### 1. 游戏循环（60fps）
+```javascript
+function gameLoop(timestamp) {
+  if (gameState.current !== GameState.PLAYING) return
+
+  const deltaTime = timestamp - lastTime
+
+  if (deltaTime >= 1000 / GAME_CONFIG.targetFPS) {
+    update(deltaTime)
+    draw()
+    lastTime = timestamp
+  }
+
+  animationId = requestAnimationFrame(gameLoop)
+}
+```
+
+#### 2. 动态平衡算法
+```javascript
+function getOperationValue(currentNumber) {
+  // 加法：当前数字的 10%-50%
+  case 'add':
+    value = Math.floor(currentNumber * randomRange(0.1, 0.5))
+
+  // 减法：不超过保留最小安全数字（3）
+  case 'sub':
+    maxSub = currentNumber - minSafeNumber
+    value = Math.floor(Math.min(maxSub, currentNumber * 0.3))
+
+  // 乘法：固定倍数 [2, 3]
+  case 'mul':
+    value = multipliers[Math.floor(Math.random() * multipliers.length)]
+
+  // 除法：能整除的除数 [2, 3, 4, 5]
+  case 'div':
+    divisors = divisors.filter(d => currentNumber % d === 0)
+    value = divisors[Math.floor(Math.random() * divisors.length)]
+}
+```
+
+#### 3. 加权随机算法
+```javascript
+function selectOperationType() {
+  const weights = { add: 3, sub: 2, mul: 2, div: 1 }
+  const totalWeight = 8
+  let random = Math.random() * totalWeight
+
+  for (const [op, weight] of Object.entries(weights)) {
+    random -= weight
+    if (random <= 0) return op
+  }
+}
+```
+
+#### 4. 移动中碰撞检测
+```javascript
+const shouldCheck = player.isMoving
+  ? (obj.lane === player.lane || obj.lane === player.targetLane)
+  : (obj.lane === player.lane)
+```
+
+#### 5. 缓动动画
+```javascript
+function easeInOutQuad(t) {
+  return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2
+}
+
+// 使用
+const t = easeInOutQuad(player.moveProgress)
+x = startCenter + (laneCenter - startCenter) * t
+```
+
+### 配置化设计
+
+数字跑酷游戏采用了高度配置化设计：
+
+```javascript
+// 游戏配置
+const GAME_CONFIG = {
+  canvasWidth: 400,
+  canvasHeight: 600,
+  scrollSpeed: 2,
+  targetFPS: 60,
+  playerY: 500,
+  laneWidth: 200,
+  playerRadius: 20
+}
+
+// 关卡配置
+const LEVEL_CONFIG = {
+  1: { distance: 2000, name: '新手教程' },
+  2: { distance: 5000, name: '初级挑战' },
+  3: { distance: 10000, name: '中级进阶' }
+}
+
+// 运算平衡配置
+const BALANCE_CONFIG = {
+  initialNumber: { min: 5, max: 15 },
+  operations: {
+    add: { minPercent: 0.1, maxPercent: 0.5 },
+    sub: { maxPercent: 0.3 },
+    mul: { multipliers: [2, 3] },
+    div: { divisors: [2, 3, 4, 5] }
+  },
+  obstacle: { minPercent: 0.3, maxPercent: 0.8 },
+  operationWeights: { add: 3, sub: 2, mul: 2, div: 1 },
+  minSafeNumber: 3,
+  maxNumber: 100
+}
+```
+
+### 状态管理
+
+使用单一状态对象管理所有游戏状态：
+
+```javascript
+gameState = {
+  current: GameState.PLAYING,     // 当前状态
+  player: {
+    lane: 'left',                 // 当前通道
+    number: 10,                   // 头顶数字
+    targetLane: 'left',           // 目标通道
+    isMoving: false,              // 是否移动中
+    moveProgress: 0               // 移动进度
+  },
+  track: {
+    offsetY: 0,                   // 跑道偏移
+    objects: [],                  // 物体数组
+    distance: 0,                  // 当前距离
+    targetDistance: 2000          // 目标距离
+  },
+  game: {
+    score: 0,                     // 得分
+    startTime: 0                  // 开始时间
+  }
+}
+```
+
+### 难度系统设计
+
+数字跑酷游戏实现了隐性连续难度系统，难度随距离平滑递增：
+
+#### 难度系数公式
+```javascript
+// 难度系数 = 1 + (distance / 5000) * 0.5，上限 2.5
+function getDifficultyMultiplier(distance) {
+  const baseMultiplier = 1 + (distance / 5000) * 0.5
+  return Math.min(baseMultiplier, 2.5)
+}
+```
+
+#### 动态配置调整
+```javascript
+function getAdjustedConfig(distance) {
+  const multiplier = getDifficultyMultiplier(distance)
+
+  return {
+    add: {
+      minPercent: Math.min(0.15, 0.1 + (multiplier - 1) * 0.025),  // 10%-15% 递增
+      maxPercent: Math.min(0.8, 0.5 + (multiplier - 1) * 0.3)      // 最大至 80%
+    },
+    sub: {
+      maxPercent: Math.min(0.5, 0.3 + (multiplier - 1) * 0.2)      // 30% -> 50%
+    },
+    mul: {
+      multipliers: multiplier > 1.9 ? [2, 3, 4, 5] : (multiplier > 1.3 ? [2, 3, 4] : [2, 3])
+    },
+    div: {
+      divisors: multiplier > 2.1 ? [2, 3, 4, 5, 6, 7] : (multiplier > 1.5 ? [2, 3, 4, 5, 6] : [2, 3, 4, 5])
+    },
+    obstacle: {
+      minPercent: Math.min(0.5, 0.3 + (multiplier - 1) * 0.1),     // 30% -> 50%
+      maxPercent: Math.min(0.85, 0.8 + (multiplier - 1) * 0.025)   // 80% -> 85%
+    }
+  }
+}
+```
+
+#### 难度递增表
+
+| 距离 | 难度系数 | 加法范围 | 减法上限 | 乘法选项 | 除法选项 | 障碍物范围 |
+|------|---------|----------|----------|----------|----------|------------|
+| 0m | 1.0 | 10%-50% | 30% | [2,3] | [2,3,4,5] | 30%-80% |
+| 2500m | 1.25 | 11%-58% | 35% | [2,3] | [2,3,4,5] | 33%-81% |
+| 5000m | 1.5 | 11%-65% | 40% | [2,3,4] | [2,3,4,5,6] | 35%-83% |
+| 10000m | 2.0 | 13%-80% | 50% | [2,3,4,5] | [2,3,4,5,6,7] | 40%-85% |
+| 15000m+ | 2.5 | 14%-80% | 50% | [2,3,4,5] | [2,3,4,5,6,7] | 45%-85% |
 
 ---
 
@@ -1428,10 +1720,26 @@ C:\workspace4idea\greedy-snake\greedy-snake\index.html
 
 ---
 
-**最后更新**：2026-01-23
-**当前进度**：七门课全部完成！🎉
+**最后更新**：2026-01-28
+**当前进度**：八门课全部完成！
 
-**最新功能**：卡通外观系统 - 搞怪滑稽表情，圆形渐变蛇身
+**最新更新**：2048 游戏像素皮肤系统
+- 双皮肤模式（默认/像素）
+- Canvas动态绘制像素数字
+- 三套主题完美兼容
+- 智能缓存机制
+
+**历史更新**：
+- 2048 游戏视觉特效系统
+- 三套主题切换（原色/暗黑/霓虹）
+- 粒子爆炸效果
+- 震动反馈系统
+- 设置面板
+
+**游戏列表**：
+1. 贪吃蛇游戏 - 经典玩法，道具系统
+2. 数字跑酷游戏 - 运算跑酷，关卡挑战
+3. 2048 游戏 - 数字合并益智游戏，视觉特效系统
 
 **已创建组件**：
 - 5 个 SubAgent（developer, reviewer, designer, tester, doc-writer）
@@ -1445,3 +1753,4 @@ C:\workspace4idea\greedy-snake\greedy-snake\index.html
 - ✅ Skills 标准流程
 - ✅ MCP 外部连接
 - ✅ Output Styles 身份切换
+- ✅ 多游戏项目管理
