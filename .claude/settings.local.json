@@ -2,8 +2,21 @@
   "permissions": {
     "allow": [
       "Bash(git add:*)",
-      "mcp__chrome-devtools__click"
+      "mcp__chrome-devtools__click",
+      "Bash(start \"\" \"C:\\\\workspace4idea\\\\greedy-snake\\\\greedy-snake\\\\src\\\\2048\\\\test-runner.html\")",
+      "mcp__chrome-devtools__take_snapshot",
+      "mcp__chrome-devtools__take_screenshot",
+      "mcp__chrome-devtools__evaluate_script",
+      "mcp__chrome-devtools__press_key",
+      "Skill(code-reviewer)",
+      "Skill(update-feature)",
+      "mcp__gemini-image__generate-image",
+      "Skill(git-push)"
     ]
   },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "gemini-image"
+  ],
   "outputStyle": "snake-game-dev"
 }

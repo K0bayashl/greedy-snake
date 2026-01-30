@@ -1,22 +1,27 @@
 {
+  "outputStyle": "online-game-expert",
   "hooks": {
-    "user-prompt-submit": {
-      "command": "git status -sb 2>/dev/null || echo '不在 Git 仓库中'",
-      "enabled": true
-    },
-    "edit-file": {
-      "command": "echo '✅ 文件已修改: {{file_path}}'"
-    ,
-      "enabled": true
-    }
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "git status -sb 2>/dev/null || echo '不在 Git 仓库中'"
+          }
+        ]
+      }
+    ]
   },
   "permissions": {
-    "bash": {
-      "allowedPrompts": [
-        "查看文件",
-        "运行测试",
-        "构建项目"
-      ]
-    }
+    "allow": [
+      "Bash(git:*)",
+      "Bash(npm:*)",
+      "Bash(node:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)"
+    ]
   }
 }
