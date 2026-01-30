@@ -1,0 +1,125 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Arial', sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  color: #333;
+}
+
+.container {
+  background: white;
+  border-radius: 20px;
+  padding: 30px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  text-align: center;
+  max-width: 500px;
+}
+
+h1 {
+  color: #667eea;
+  margin-bottom: 20px;
+  font-size: 2.2em;
+}
+
+.game-info {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 15px;
+  font-size: 1.1em;
+  font-weight: bold;
+}
+
+.player-number,
+.distance,
+.high-score {
+  color: #764ba2;
+}
+
+#gameCanvas {
+  border: 3px solid #667eea;
+  border-radius: 10px;
+  background: #f0f0f0;
+  display: block;
+  margin: 0 auto 15px;
+  cursor: pointer;
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 15px;
+}
+
+button {
+  background: #667eea;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  font-size: 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+button:hover {
+  background: #5568d3;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.instructions {
+  font-size: 0.9em;
+  color: #666;
+  line-height: 1.6;
+  text-align: left;
+  background: #f8f8f8;
+  padding: 15px;
+  border-radius: 10px;
+}
+
+.instructions strong {
+  color: #667eea;
+}
+
+.game-message {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.85);
+  color: white;
+  padding: 30px 50px;
+  border-radius: 15px;
+  font-size: 1.5em;
+  font-weight: bold;
+  text-align: center;
+  z-index: 100;
+  display: none;
+}
+
+.game-message.gameover {
+  background: rgba(244, 67, 54, 0.9);
+}
+
+.container {
+  position: relative;
+}

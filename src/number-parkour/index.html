@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>数字跑酷 - Number Parkour</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>数字跑酷</h1>
+
+    <div class="game-info">
+      <div class="player-number">数字: <span id="playerNumber">10</span></div>
+      <div class="distance">距离: <span id="distance">0</span>m</div>
+      <div class="high-score">最高分: <span id="highScore">0</span></div>
+    </div>
+
+    <canvas id="gameCanvas" width="400" height="600"></canvas>
+
+    <div class="controls">
+      <button id="startBtn">开始游戏</button>
+      <button id="pauseBtn">暂停</button>
+    </div>
+
+    <div class="instructions">
+      <p>按 <strong>空格键</strong> 或 <strong>点击屏幕</strong> 切换左右通道</p>
+      <p>穿过运算护栏执行对应运算，数字 >= 障碍物才能通过</p>
+      <p>数字 < 0 时游戏结束，坚持越久得分越高！</p>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
