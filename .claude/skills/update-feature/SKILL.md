@@ -72,6 +72,23 @@ Task(
 )
 ```
 
+**问题循环机制**：
+
+如果 reviewer 发现问题（存在 🔴 高 或 🟡 中 级别问题）：
+
+1. **记录问题清单** - 列出所有需要修复的问题
+2. **调用 developer 修复**：
+   ```
+   Task(
+     subagent_type="developer",
+     prompt="修复审查发现的问题\n\n问题清单：{问题列表}\n\n修复要求：\n1. 逐项修复每个问题\n2. 保持向后兼容\n3. 修复后报告修改内容"
+   )
+   ```
+3. **再次调用 reviewer** - 验证问题是否已修复
+4. **循环直到**：无 🔴 高 和 🟡 中 级别问题，或达到最大循环次数（3次）
+
+**最大循环次数**：3次（防止无限循环）
+
 ### 阶段6：测试验证
 
 **调用 tester SubAgent**：
@@ -83,6 +100,23 @@ Task(
 )
 ```
 
+**问题循环机制**：
+
+如果 tester 发现 Bug 或问题：
+
+1. **记录问题清单** - 列出所有发现的 Bug
+2. **调用 developer 修复**：
+   ```
+   Task(
+     subagent_type="developer",
+     prompt="修复测试发现的 Bug\n\nBug 清单：{Bug列表}\n\n修复要求：\n1. 逐项修复每个 Bug\n2. 确保不影响原有功能\n3. 修复后报告修改内容"
+   )
+   ```
+3. **再次调用 tester** - 验证 Bug 是否已修复
+4. **循环直到**：所有测试通过，或达到最大循环次数（3次）
+
+**最大循环次数**：3次（防止无限循环）
+
 ### 阶段7：文档更新
 
 **调用 doc-writer SubAgent**：
@@ -90,7 +124,7 @@ Task(
 ```
 Task(
   subagent_type="doc-writer",
-  prompt="更新功能文档：{功能名称}\n\n更新说明：{更新说明}\n变更要点：{变更要点}\n\n更新以下文档：\n1. docs/learning.md - 更新功能说明\n2. docs/features.md - 更新功能详情\n3. 添加版本更新日志"
+  prompt="更新功能文档\n\n游戏：{游戏名称，默认 greedy-snake}\n功能：{功能名称}\n\n更新说明：{更新说明}\n变更要点：{变更要点}\n测试结果：{测试结果}\n\n按照 doc-writer 的多游戏目录规范：\n1. 在 docs/{游戏名称}/ 下找到功能目录\n2. 更新或创建 design.md、test-report.md、README.md\n3. 更新 docs/{游戏名称}/README.md 和 docs/guides/learning.md\n4. 添加版本更新日志"
 )
 ```
 
