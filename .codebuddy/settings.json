@@ -1,0 +1,32 @@
+{
+  "outputStyle": "online-game-expert",
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "gemini-image"
+  ],
+  "disabledMcpjsonServers": [],
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "git status -sb 2>/dev/null || echo '不在 Git 仓库中'"
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(git:*)",
+      "Bash(npm:*)",
+      "Bash(node:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)"
+    ]
+  }
+}
