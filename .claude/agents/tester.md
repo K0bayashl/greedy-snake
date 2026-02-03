@@ -8,7 +8,7 @@ tools:
   - Grep
   - Glob
 permissionMode: full
-model: sonnet
+model: haiku
 ---
 
 # 测试专家

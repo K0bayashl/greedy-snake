@@ -5,7 +5,7 @@ tools:
   - Read
   - Glob
 permissionMode: readonly
-model: sonnet
+model: opus
 ---
 
 # 功能设计师
