@@ -45,44 +45,52 @@ keep-coding-instructions: true
 2. 修改后说明变更内容（改了什么、为什么）
 3. 重要功能完成后更新 learning.md
 
-## Skill 使用判断
+## 任务执行策略
 
-### ⚠️ 必须使用 Skill 的情况
+### 任务类型识别
 
-| 用户话术模式 | 应使用的 Skill |
-|-------------|---------------|
-| "添加新功能"/"加一个xxx功能"/"实现xxx" | `add-feature` |
-| "更新xxx功能"/"修改xxx"/"优化xxx"/"给xxx加个xxx" | `update-feature` |
-| "审查代码"/"检查代码质量"/"看看有没有问题" | `code-reviewer` |
-| "测试游戏"/"验证功能"/"看看功能是否正常" | `game-tester` |
-| "生成变更摘要"/"看看改了什么" | `change-summary` |
+| 用户话术模式 | 任务类型 | 执行方式 |
+|-------------|---------|---------|
+| "添加新功能"/"加一个xxx功能"/"实现xxx" | 添加新功能 | Manager 完整流程 |
+| "更新xxx功能"/"修改xxx"/"优化xxx"/"给xxx加个xxx" | 更新现有功能 | Manager 完整流程 |
+| "审查代码"/"检查代码质量"/"看看有没有问题" | 代码审查 | `code-reviewer` Skill |
+| "测试游戏"/"验证功能"/"看看功能是否正常" | 功能测试 | `game-tester` Skill |
+| "生成变更摘要"/"看看改了什么" | 查看变更 | `change-summary` Skill |
 
 ### 判断逻辑
 
 **Step 1**: 识别用户意图类型
-- 新功能 → `add-feature`
-- 修改现有功能 → `update-feature`
-- 检查代码质量 → `code-reviewer`
-- 测试功能 → `game-tester`
-- 查看变更 → `change-summary`
+- 新功能 → 建议 Manager 完整流程
+- 修改现有功能 → 建议 Manager 完整流程
+- 检查代码质量 → `code-reviewer` Skill
+- 测试功能 → `game-tester` Skill
+- 查看变更 → `change-summary` Skill
 
 **Step 2**: 确认是否是完整任务
 - 简单任务（单行修改、明显问题）→ 自己完成
-- 复杂任务（多步骤、涉及多个文件）→ 使用 Skill
+- 复杂任务（多步骤、涉及多个文件）→ Manager 完整流程
 
-**Step 3**: 使用 Skill 工具调用
-```
-Skill(skill="xxx", args="相关参数")
-```
+**Step 3**: 向用户说明并执行
 
 ### 示例
 
 | 用户输入 | 识别结果 | 操作 |
 |---------|---------|------|
-| "添加障碍物功能" | 添加新功能 | `Skill(skill="add-feature", args="障碍物")` |
-| "障碍物加个警告提示" | 更新现有功能 | `Skill(skill="update-feature", args="障碍物生成警告")` |
+| "添加障碍物功能" | 添加新功能 | 建议 Manager 执行完整流程 |
+| "障碍物加个警告提示" | 更新现有功能 | 建议 Manager 执行更新流程 |
 | "检查一下代码有没有问题" | 代码审查 | `Skill(skill="code-reviewer", args="src/game.js")` |
-| "改个变量名" | 简单任务 | 自己完成，不用 Skill |
+| "改个变量名" | 简单任务 | 自己完成 |
+
+### Manager 完整流程说明
+
+复杂任务会通过 Manager Agent 执行：
+1. 需求确认
+2. 设计评审（designer）
+3. 代码实现（developer）
+4. 代码审查（reviewer）
+5. 测试验证（tester）
+6. 文档更新（doc-writer）
+7. 完成汇报
 
 ## 回复规范
 
