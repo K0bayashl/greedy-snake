@@ -6,6 +6,12 @@ const BEST_SCORE_KEY = '2048-best-score'
 const THEME_KEY = '2048-theme'
 const SETTINGS_KEY = '2048-settings'
 const SKIN_KEY = '2048-skin'
+const TILE_RAINBOW = 'rainbow'
+const DOUBLE_CHANCE_LEVELS = {
+  low: 0.12,
+  medium: 0.22,
+  high: 0.32
+}
 
 // ===== 主题颜色配置 =====
 const TILE_COLORS = {
@@ -197,6 +203,11 @@ class TileSkinManager {
   }
 
   renderPixelCanvas(value) {
+    // 处理彩虹方块的像素显示
+    if (value === TILE_RAINBOW) {
+      return this.renderRainbowPixelCanvas()
+    }
+
     const valueStr = value.toString()
     const digits = valueStr.split('')
     const pixelSize = 4
@@ -256,6 +267,37 @@ class TileSkinManager {
       }
     })
 
+    return canvas
+  }
+
+  renderRainbowPixelCanvas() {
+    const pixelSize = 4
+    const cols = 7
+    const rows = 7
+    const canvas = document.createElement('canvas')
+    canvas.width = cols * pixelSize
+    canvas.height = rows * pixelSize
+    canvas.className = 'pixel-number'
+    const ctx = canvas.getContext('2d')
+
+    // 绘制一个彩色的像素星号
+    const colors = ['#FF0000', '#FF7F00', '#FFFF00', '#00FF00', '#0000FF', '#4B0082', '#9400D3']
+    const pattern = [
+      [0, 0, 1, 0, 0],
+      [0, 1, 1, 1, 0],
+      [1, 1, 1, 1, 1],
+      [0, 1, 1, 1, 0],
+      [0, 1, 0, 1, 0]
+    ]
+
+    for (let r = 0; r < pattern.length; r++) {
+      for (let c = 0; c < pattern[r].length; c++) {
+        if (pattern[r][c]) {
+          ctx.fillStyle = colors[(r + c) % colors.length]
+          ctx.fillRect((c + 1) * pixelSize, (r + 1) * pixelSize, pixelSize, pixelSize)
+        }
+      }
+    }
     return canvas
   }
 
@@ -347,6 +389,10 @@ class ParticleSystem {
   }
 
   getTileColor(value) {
+    // 翻倍效果使用金色
+    if (value === 'double') {
+      return '#FFD700'
+    }
     // 获取当前主题下的颜色
     const theme = document.documentElement.getAttribute('data-theme') || 'light'
     return (TILE_COLORS[theme] && TILE_COLORS[theme][value]) || '#EDC22E'
@@ -547,7 +593,8 @@ class SettingsManager {
     return {
       particleDensity: 'medium',
       particlesEnabled: true,
-      vibrationEnabled: true
+      vibrationEnabled: true,
+      doubleChanceLevel: 'medium'
     }
   }
 
@@ -572,8 +619,13 @@ class SettingsManager {
     })
 
     // 更新粒子密度按钮
-    document.querySelectorAll('.option-btn').forEach((btn) => {
+    document.querySelectorAll('.option-btn[data-density]').forEach((btn) => {
       btn.classList.toggle('active', btn.dataset.density === this.settings.particleDensity)
+    })
+
+    // 更新翻倍概率按钮
+    document.querySelectorAll('.option-btn[data-double]').forEach((btn) => {
+      btn.classList.toggle('active', btn.dataset.double === this.settings.doubleChanceLevel)
     })
 
     // 更新开关
@@ -602,11 +654,21 @@ class SettingsManager {
     })
 
     // 粒子密度选择
-    document.querySelectorAll('.option-btn').forEach((btn) => {
+    document.querySelectorAll('.option-btn[data-density]').forEach((btn) => {
       btn.addEventListener('click', () => {
         const density = btn.dataset.density
         this.settings.particleDensity = density
         this.particleSystem.setDensity(density)
+        this.saveSettings()
+        this.updateUI()
+      })
+    })
+
+    // 翻倍概率选择
+    document.querySelectorAll('.option-btn[data-double]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const level = btn.dataset.double
+        this.settings.doubleChanceLevel = level
         this.saveSettings()
         this.updateUI()
       })
@@ -655,6 +717,8 @@ class Game2048 {
     this.effectsManager = effectsManager
     this.skinManager = skinManager
     this.mergedPositions = []
+    this.settingsManager = null
+    this.doubledPositions = []
 
     this.tileContainer = document.getElementById('tile-container')
     this.currentScoreElement = document.getElementById('current-score')
@@ -791,13 +855,36 @@ class Game2048 {
 
     // 使用 Math.random() 生成伪随机数，用于游戏逻辑（非加密场景）
     const randomCell = emptyCells[Math.floor(Math.random() * emptyCells.length)]
-    const value = Math.random() < 0.9 ? 2 : 4
+    let value = Math.random() < 0.9 ? 2 : 4
+
+    // 1% 概率生成彩虹方块 (分数需超过 500)
+    if (this.score > 500 && Math.random() < 0.01) {
+      value = TILE_RAINBOW
+    }
 
     this.grid[randomCell.row][randomCell.col] = {
       value: value,
       isNew: true,
       merged: false
     }
+  }
+
+  canMerge(val1, val2) {
+    if (val1 === TILE_RAINBOW || val2 === TILE_RAINBOW) return true
+    return val1 === val2
+  }
+
+  getMergeResult(val1, val2) {
+    if (val1 === TILE_RAINBOW && val2 === TILE_RAINBOW) {
+      return WINNING_TILE
+    }
+    if (val1 === TILE_RAINBOW) {
+      return val2 * 2
+    }
+    if (val2 === TILE_RAINBOW) {
+      return val1 * 2
+    }
+    return val1 * 2
   }
 
   cloneGrid(grid) {
@@ -850,6 +937,13 @@ class Game2048 {
     this.previousState = null
   }
 
+  checkDoubleChance() {
+    if (!this.settingsManager) return false
+    const level = this.settingsManager.settings.doubleChanceLevel
+    const chance = DOUBLE_CHANCE_LEVELS[level] || 0.22
+    return Math.random() < chance
+  }
+
   move(direction) {
     if (this.over && !this.keepPlaying) return
 
@@ -860,6 +954,7 @@ class Game2048 {
     let moved = false
     let mergedScore = 0
     this.mergedPositions = []
+    this.doubledPositions = []
 
     // 清除合并标记
     for (let row = 0; row < GRID_SIZE; row++) {
@@ -867,6 +962,7 @@ class Game2048 {
         if (this.grid[row][col]) {
           this.grid[row][col].merged = false
           this.grid[row][col].isNew = false
+          this.grid[row][col].doubled = false
         }
       }
     }
@@ -882,28 +978,59 @@ class Game2048 {
           const farthest = positions.farthest
 
           if (next && this.grid[next.row][next.col] &&
-              this.grid[next.row][next.col].value === tile.value &&
               !this.grid[next.row][next.col].merged) {
-            // 合并
-            const mergedValue = tile.value * 2
-            this.grid[next.row][next.col] = {
-              value: mergedValue,
-              merged: true,
-              isNew: false
-            }
-            this.grid[cell.row][cell.col] = null
-            mergedScore += mergedValue
-            moved = true
 
-            // 记录合并位置
-            this.mergedPositions.push({
-              row: next.row,
-              col: next.col,
-              value: mergedValue
-            })
+            const nextTile = this.grid[next.row][next.col]
+            if (this.canMerge(tile.value, nextTile.value)) {
+              // 合并
+              let mergedValue = this.getMergeResult(tile.value, nextTile.value)
+              let isDoubled = false
 
-            if (mergedValue === WINNING_TILE && !this.won) {
-              this.won = true
+              // 检查是否触发翻倍（翻倍后不超过2048）
+              if (typeof mergedValue === 'number' && mergedValue * 2 <= WINNING_TILE && this.checkDoubleChance()) {
+                mergedValue = mergedValue * 2
+                isDoubled = true
+              }
+
+              this.grid[next.row][next.col] = {
+                value: mergedValue,
+                merged: true,
+                isNew: false,
+                doubled: isDoubled
+              }
+              this.grid[cell.row][cell.col] = null
+
+              if (typeof mergedValue === 'number') {
+                mergedScore += mergedValue
+              }
+
+              moved = true
+
+              // 记录合并位置
+              this.mergedPositions.push({
+                row: next.row,
+                col: next.col,
+                value: mergedValue
+              })
+
+              if (isDoubled) {
+                this.doubledPositions.push({
+                  row: next.row,
+                  col: next.col,
+                  value: mergedValue
+                })
+              }
+
+              if (mergedValue === WINNING_TILE && !this.won) {
+                this.won = true
+              }
+            } else {
+              // 无法合并，移动到最远空位
+              if (farthest.row !== cell.row || farthest.col !== cell.col) {
+                this.grid[farthest.row][farthest.col] = tile
+                this.grid[cell.row][cell.col] = null
+                moved = true
+              }
             }
           } else {
             // 移动
@@ -953,6 +1080,22 @@ class Game2048 {
             this.effectsManager.triggerMergeEffect(x, y, pos.value)
           }
         })
+      }, 150)
+    }
+
+    // 翻倍粒子效果（金色）
+    if (this.doubledPositions.length > 0) {
+      setTimeout(() => {
+        this.doubledPositions.forEach((pos) => {
+          const tileElement = this.getTileElementAt(pos.row, pos.col)
+          if (tileElement) {
+            const rect = tileElement.getBoundingClientRect()
+            const x = rect.left + rect.width / 2
+            const y = rect.top + rect.height / 2
+            this.effectsManager.particleSystem.createExplosion(x, y, 'double')
+          }
+        })
+        this.doubledPositions = []
       }, 150)
     }
   }
@@ -1019,16 +1162,25 @@ class Game2048 {
   movesAvailable() {
     for (let row = 0; row < GRID_SIZE; row++) {
       for (let col = 0; col < GRID_SIZE; col++) {
-        if (!this.grid[row][col]) {
+        const tile = this.grid[row][col]
+        if (!tile) {
           return true
         }
-        if (col < GRID_SIZE - 1 &&
-            this.grid[row][col].value === this.grid[row][col + 1].value) {
-          return true
+
+        // 检查右侧
+        if (col < GRID_SIZE - 1) {
+          const rightTile = this.grid[row][col + 1]
+          if (rightTile && this.canMerge(tile.value, rightTile.value)) {
+            return true
+          }
         }
-        if (row < GRID_SIZE - 1 &&
-            this.grid[row][col].value === this.grid[row + 1][col].value) {
-          return true
+
+        // 检查下方
+        if (row < GRID_SIZE - 1) {
+          const bottomTile = this.grid[row + 1][col]
+          if (bottomTile && this.canMerge(tile.value, bottomTile.value)) {
+            return true
+          }
         }
       }
     }
@@ -1045,7 +1197,7 @@ class Game2048 {
           const tileElement = document.createElement('div')
           tileElement.className = `tile tile-${tile.value}`
 
-          if (tile.value > 2048) {
+          if (tile.value > WINNING_TILE) {
             tileElement.classList.add('tile-super')
           }
 
@@ -1054,6 +1206,9 @@ class Game2048 {
           }
           if (tile.merged) {
             tileElement.classList.add('tile-merged')
+          }
+          if (tile.doubled) {
+            tileElement.classList.add('tile-doubled')
           }
 
           // 根据皮肤类型渲染数字
@@ -1196,6 +1351,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 初始化设置管理器
     const settingsManager = new SettingsManager(particleSystem, effectsManager, skinManager, game)
+    game.settingsManager = settingsManager
     console.log('Settings manager initialized')
 
     // 将管理器暴露到全局（调试用）

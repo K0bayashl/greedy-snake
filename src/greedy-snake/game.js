@@ -37,7 +37,7 @@ let startTime = 0;
 let playTime = 0;
 let currentDifficulty = 'easy';
 
-// 特殊食物（双倍分数）
+// 双倍食物
 let bonusFood = null; // 双倍食物对象 {x, y, spawnTime}
 const BONUS_FOOD_DURATION = 6000; // 双倍食物存在时间（毫秒）
 const BONUS_FOOD_SCORE = 20; // 双倍食物得分
@@ -46,7 +46,22 @@ const BONUS_FOOD_RESPAWN_MIN_DELAY = 2000; // 双倍食物重生最小延迟（�
 const BONUS_FOOD_RESPAWN_MAX_DELAY = 5000; // 双倍食物重生最大延迟（毫秒）
 let bonusFoodCheckInterval = null; // 检查双倍食物超时的定时器
 let bonusFoodRespawnTimeout = null; // 双倍食物重生延迟定时器
+let bonusFoodRespawnEndTime = 0; // 记录双倍食物重生定时器的结束时间
 let bonusFoodPauseTime = 0; // 记录双倍食物暂停时的时间戳
+let bonusFoodRespawnPauseTime = 0; // 记录双倍食物重生定时器暂停时的时间戳
+
+// 彩虹方块
+let rainbowFood = null; // 彩虹方块对象 {x, y, spawnTime}
+const RAINBOW_FOOD_DURATION = 5000; // 彩虹方块存在时间（毫秒）
+const RAINBOW_FOOD_SCORE = 30; // 彩虹方块得分
+const RAINBOW_FOOD_SPAWN_CHANCE = 0.15; // 生成彩虹方块的概率
+const RAINBOW_FOOD_RESPAWN_MIN_DELAY = 3000; // 彩虹方块重生最小延迟（毫秒）
+const RAINBOW_FOOD_RESPAWN_MAX_DELAY = 6000; // 彩虹方块重生最大延迟（毫秒）
+let rainbowFoodCheckInterval = null; // 检查彩虹方块超时的定时器
+let rainbowFoodRespawnTimeout = null; // 彩虹方块重生延迟定时器
+let rainbowFoodRespawnEndTime = 0; // 记录彩虹方块重生定时器的结束时间
+let rainbowFoodPauseTime = 0; // 记录彩虹方块暂停时的时间戳
+let rainbowFoodRespawnPauseTime = 0; // 记录彩虹方块重生定时器暂停时的时间戳
 
 // 障碍物系统
 let obstacles = []; // 障碍物数组
@@ -56,7 +71,12 @@ let obstacleSpawnTimeout = null; // 首次生成定时器
 let obstacleWarningTimeout = null; // 警告显示定时器
 let obstaclePauseTime = 0; // 记录障碍物暂停时的时间戳
 let obstacleNextRefreshTime = 0; // 下次刷新时间戳
+let obstacleSpawnEndTime = 0; // 记录首次生成定时器的结束时间
+let obstacleSpawnPauseTime = 0; // 记录首次生成定时器暂停时的时间戳
+let obstacleWarningEndTime = 0; // 记录警告定时器的结束时间
+let obstacleWarningPauseTime = 0; // 记录警告定时器暂停时的时间戳
 const OBSTACLE_WARNING_TIME = 3000; // 障碍物生成前警告时间（毫秒）
+let isInObstacleSpawnPhase = false; // 标识是否在首次生成阶段
 
 // 无敌道具系统
 let invinciblePowerUp = null; // 无敌道具对象 {x, y, spawnTime}
@@ -65,7 +85,9 @@ let invincibleEndTime = 0; // 无敌状态结束时间戳
 let invinciblePowerUpCheckInterval = null; // 检查道具超时的定时器
 let invincibleStatusCheckInterval = null; // 检查无敌状态超时的定时器
 let invinciblePowerUpRespawnTimeout = null; // 道具重生延迟定时器
+let invinciblePowerUpRespawnEndTime = 0; // 记录道具重生定时器的结束时间
 let invinciblePowerUpPauseTime = 0; // 记录道具暂停时的时间戳
+let invinciblePowerUpRespawnPauseTime = 0; // 记录道具重生定时器暂停时的时间戳
 let invincibleStatusPauseTime = 0; // 记录无敌状态暂停时的时间戳
 
 // 初始化游戏
@@ -133,7 +155,23 @@ function resetGame() {
         bonusFoodRespawnTimeout = null;
     }
     bonusFood = null;
+    bonusFoodRespawnEndTime = 0;
     bonusFoodPauseTime = 0;
+    bonusFoodRespawnPauseTime = 0;
+
+    // 清除彩虹方块相关定时器和状态
+    if (rainbowFoodCheckInterval) {
+        clearInterval(rainbowFoodCheckInterval);
+        rainbowFoodCheckInterval = null;
+    }
+    if (rainbowFoodRespawnTimeout) {
+        clearTimeout(rainbowFoodRespawnTimeout);
+        rainbowFoodRespawnTimeout = null;
+    }
+    rainbowFood = null;
+    rainbowFoodRespawnEndTime = 0;
+    rainbowFoodPauseTime = 0;
+    rainbowFoodRespawnPauseTime = 0;
 
     // 清除障碍物相关定时器和状态
     if (obstacleRefreshTimeout) {
@@ -152,6 +190,11 @@ function resetGame() {
     upcomingObstacles = [];
     obstaclePauseTime = 0;
     obstacleNextRefreshTime = 0;
+    obstacleSpawnEndTime = 0;
+    obstacleSpawnPauseTime = 0;
+    obstacleWarningEndTime = 0;
+    obstacleWarningPauseTime = 0;
+    isInObstacleSpawnPhase = false;
 
     // 清除无敌道具相关定时器和状态
     if (invinciblePowerUpCheckInterval) {
@@ -169,7 +212,9 @@ function resetGame() {
     invinciblePowerUp = null;
     isInvincible = false;
     invincibleEndTime = 0;
+    invinciblePowerUpRespawnEndTime = 0;
     invinciblePowerUpPauseTime = 0;
+    invinciblePowerUpRespawnPauseTime = 0;
     invincibleStatusPauseTime = 0;
 
     draw();
@@ -186,6 +231,14 @@ function startGame() {
         if (bonusFoodRespawnTimeout) {
             clearTimeout(bonusFoodRespawnTimeout);
             bonusFoodRespawnTimeout = null;
+        }
+        if (rainbowFoodCheckInterval) {
+            clearInterval(rainbowFoodCheckInterval);
+            rainbowFoodCheckInterval = null;
+        }
+        if (rainbowFoodRespawnTimeout) {
+            clearTimeout(rainbowFoodRespawnTimeout);
+            rainbowFoodRespawnTimeout = null;
         }
         if (obstacleRefreshTimeout) {
             clearTimeout(obstacleRefreshTimeout);
@@ -223,20 +276,26 @@ function startGame() {
         const spawnDelay = OBSTACLE_CONFIG[currentDifficulty].spawnDelay;
         const warningDelay = Math.max(0, spawnDelay - OBSTACLE_WARNING_TIME);
 
+        obstacleWarningEndTime = Date.now() + warningDelay;
         obstacleWarningTimeout = setTimeout(() => {
             if (isPlaying && !isPaused) {
                 showObstacleWarning();
             }
             obstacleWarningTimeout = null;
+            obstacleWarningEndTime = 0;
         }, warningDelay);
 
         // 调度障碍物首次生成
+        isInObstacleSpawnPhase = true;
+        obstacleSpawnEndTime = Date.now() + spawnDelay;
         obstacleSpawnTimeout = setTimeout(() => {
             if (isPlaying && !isPaused) {
                 spawnObstacles();
                 scheduleObstacleRefresh();
             }
             obstacleSpawnTimeout = null;
+            obstacleSpawnEndTime = 0;
+            isInObstacleSpawnPhase = false; // 标记退出首次生成阶段
         }, spawnDelay);
     }
 }
@@ -256,27 +315,57 @@ function togglePause() {
             bonusFoodCheckInterval = null;
         }
 
+        // 暂停双倍食物重生定时器
+        if (bonusFoodRespawnTimeout) {
+            clearTimeout(bonusFoodRespawnTimeout);
+            bonusFoodRespawnTimeout = null;
+            // 记录暂停时间
+            bonusFoodRespawnPauseTime = Date.now();
+        }
+
         // 记录暂停时间（如果有双倍食物）
         if (bonusFood) {
             bonusFoodPauseTime = Date.now();
+        }
+
+        // 暂停彩虹方块检查定时器
+        if (rainbowFoodCheckInterval) {
+            clearInterval(rainbowFoodCheckInterval);
+            rainbowFoodCheckInterval = null;
+        }
+
+        // 记录暂停时间（如果有彩虹方块）
+        if (rainbowFood) {
+            rainbowFoodPauseTime = Date.now();
+        }
+
+        // 暂停彩虹方块重生定时器
+        if (rainbowFoodRespawnTimeout) {
+            clearTimeout(rainbowFoodRespawnTimeout);
+            rainbowFoodRespawnTimeout = null;
+            // 记录剩余延迟时间
+            rainbowFoodRespawnPauseTime = Date.now();
         }
 
         // 暂停障碍物刷新定时器
         if (obstacleRefreshTimeout) {
             clearTimeout(obstacleRefreshTimeout);
             obstacleRefreshTimeout = null;
+            obstaclePauseTime = Date.now();
         }
+
+        // 暂停障碍物首次生成定时器
         if (obstacleSpawnTimeout) {
             clearTimeout(obstacleSpawnTimeout);
             obstacleSpawnTimeout = null;
+            obstacleSpawnPauseTime = Date.now();
         }
+
+        // 暂停障碍物警告定时器
         if (obstacleWarningTimeout) {
             clearTimeout(obstacleWarningTimeout);
             obstacleWarningTimeout = null;
-        }
-        // 记录障碍物暂停时间
-        if (obstacles.length > 0 || obstacleNextRefreshTime > 0) {
-            obstaclePauseTime = Date.now();
+            obstacleWarningPauseTime = Date.now();
         }
 
         // 暂停无敌道具检查定时器
@@ -287,6 +376,14 @@ function togglePause() {
         if (invincibleStatusCheckInterval) {
             clearInterval(invincibleStatusCheckInterval);
             invincibleStatusCheckInterval = null;
+        }
+
+        // 暂停无敌道具重生定时器
+        if (invinciblePowerUpRespawnTimeout) {
+            clearTimeout(invinciblePowerUpRespawnTimeout);
+            invinciblePowerUpRespawnTimeout = null;
+            // 记录暂停时间
+            invinciblePowerUpRespawnPauseTime = Date.now();
         }
         // 记录暂停时间
         if (invinciblePowerUp) {
@@ -313,8 +410,97 @@ function togglePause() {
             }
         }
 
-        // 恢复障碍物刷新定时器
-        if (obstacles.length > 0 && obstacleNextRefreshTime > 0) {
+        // 恢复双倍食物重生定时器
+        if (bonusFoodRespawnEndTime > 0 && !bonusFoodRespawnTimeout) {
+            // 补偿暂停时间
+            const pausedDuration = Date.now() - bonusFoodRespawnPauseTime;
+            bonusFoodRespawnEndTime += pausedDuration;
+            const remainingTime = bonusFoodRespawnEndTime - Date.now();
+
+            if (remainingTime > 0) {
+                bonusFoodRespawnTimeout = setTimeout(() => {
+                    if (isPlaying && !isPaused) {
+                        generateBonusFood();
+                    }
+                    bonusFoodRespawnTimeout = null;
+                    bonusFoodRespawnEndTime = 0;
+                }, remainingTime);
+            } else {
+                // 暂停期间已经应该重生了
+                if (isPlaying && !isPaused) {
+                    generateBonusFood();
+                }
+                bonusFoodRespawnEndTime = 0;
+            }
+        }
+
+        // 恢复彩虹方块检查定时器
+        if (rainbowFood) {
+            // 调整 spawnTime 以补偿暂停时间
+            const pausedDuration = Date.now() - rainbowFoodPauseTime;
+            rainbowFood.spawnTime += pausedDuration;
+
+            // 重新启动检查定时器
+            if (!rainbowFoodCheckInterval) {
+                rainbowFoodCheckInterval = setInterval(checkRainbowFoodTimeout, 500);
+            }
+        }
+
+        // 恢复彩虹方块重生定时器
+        if (rainbowFoodRespawnEndTime > 0 && !rainbowFoodRespawnTimeout) {
+            // 补偿暂停时间
+            const pausedDuration = Date.now() - rainbowFoodRespawnPauseTime;
+            rainbowFoodRespawnEndTime += pausedDuration;
+            const remainingTime = rainbowFoodRespawnEndTime - Date.now();
+
+            if (remainingTime > 0) {
+                rainbowFoodRespawnTimeout = setTimeout(() => {
+                    if (isPlaying && !isPaused) {
+                        generateRainbowFood();
+                    }
+                    rainbowFoodRespawnTimeout = null;
+                    rainbowFoodRespawnEndTime = 0;
+                }, remainingTime);
+            } else {
+                // 暂停期间已经应该重生了
+                if (isPlaying && !isPaused) {
+                    generateRainbowFood();
+                }
+                rainbowFoodRespawnEndTime = 0;
+            }
+        }
+
+        // 恢复障碍物定时器
+        // 情况1：首次生成阶段 - 恢复首次生成逻辑
+        if (isInObstacleSpawnPhase && obstacleSpawnEndTime > 0 && obstacleSpawnPauseTime > 0 && !obstacleSpawnTimeout) {
+            // 补偿暂停时间
+            const pausedDuration = Date.now() - obstacleSpawnPauseTime;
+            obstacleSpawnEndTime += pausedDuration;
+            const remainingTime = obstacleSpawnEndTime - Date.now();
+
+            if (remainingTime > 0) {
+                obstacleSpawnTimeout = setTimeout(() => {
+                    if (isPlaying && !isPaused) {
+                        spawnObstacles();
+                        scheduleObstacleRefresh();
+                        isInObstacleSpawnPhase = false; // 标记退出首次生成阶段
+                    }
+                    obstacleSpawnTimeout = null;
+                    obstacleSpawnEndTime = 0;
+                }, remainingTime);
+            } else {
+                // 暂停期间已经应该生成了
+                if (isPlaying && !isPaused) {
+                    spawnObstacles();
+                    scheduleObstacleRefresh();
+                    obstaclePauseTime = Date.now(); // 设置以便下次暂停时能正确记录
+                }
+                obstacleSpawnEndTime = 0;
+                isInObstacleSpawnPhase = false; // 标记退出首次生成阶段
+            }
+        }
+        // 情况2：刷新阶段 - 恢复刷新逻辑
+        else if (!isInObstacleSpawnPhase && obstaclePauseTime > 0 && !obstacleRefreshTimeout) {
             const pausedDuration = Date.now() - obstaclePauseTime;
             obstacleNextRefreshTime += pausedDuration;
             const remainingTime = obstacleNextRefreshTime - Date.now();
@@ -323,35 +509,62 @@ function togglePause() {
                 obstacleRefreshTimeout = setTimeout(() => {
                     if (isPlaying && !isPaused) {
                         refreshObstacles();
-                        scheduleObstacleRefresh();
+                        scheduleObstacleRefresh();  // 定时器到期时自动调度下一次
                     }
                 }, remainingTime);
             } else {
                 // 暂停期间已经应该刷新了
                 refreshObstacles();
-                scheduleObstacleRefresh();
+                scheduleObstacleRefresh();  // 立即刷新后调度
             }
-        } else if (obstacleSpawnTimeout === null && obstacles.length === 0 && upcomingObstacles.length === 0) {
-            // 如果障碍物还没生成也没警告，重新调度
-            const spawnDelay = OBSTACLE_CONFIG[currentDifficulty].spawnDelay;
-            const warningDelay = Math.max(0, spawnDelay - OBSTACLE_WARNING_TIME);
+            obstaclePauseTime = 0;
+        }
+        // 情况3：恢复警告定时器（首次生成阶段的警告）
+        else if (isInObstacleSpawnPhase && obstacleWarningEndTime > 0 && !obstacleWarningTimeout && obstacleWarningPauseTime > 0) {
+            // 补偿暂停时间
+            const pausedDuration = Date.now() - obstacleWarningPauseTime;
+            obstacleWarningEndTime += pausedDuration;
+            const remainingTime = obstacleWarningEndTime - Date.now();
 
-            // 先调度警告
-            obstacleWarningTimeout = setTimeout(() => {
+            if (remainingTime > 0) {
+                obstacleWarningTimeout = setTimeout(() => {
+                    if (isPlaying && !isPaused) {
+                        showObstacleWarning();
+                    }
+                    obstacleWarningTimeout = null;
+                    obstacleWarningEndTime = 0;
+                }, remainingTime);
+            } else {
+                // 暂停期间已经应该显示警告了
                 if (isPlaying && !isPaused) {
                     showObstacleWarning();
                 }
-                obstacleWarningTimeout = null;
-            }, warningDelay);
+                obstacleWarningEndTime = 0;
+            }
+        }
 
-            // 再调度生成
-            obstacleSpawnTimeout = setTimeout(() => {
+        // 恢复无敌道具重生定时器
+        if (invinciblePowerUpRespawnEndTime > 0 && !invinciblePowerUpRespawnTimeout) {
+            // 补偿暂停时间
+            const pausedDuration = Date.now() - invinciblePowerUpRespawnPauseTime;
+            invinciblePowerUpRespawnEndTime += pausedDuration;
+            const remainingTime = invinciblePowerUpRespawnEndTime - Date.now();
+
+            if (remainingTime > 0) {
+                invinciblePowerUpRespawnTimeout = setTimeout(() => {
+                    if (isPlaying && !isPaused) {
+                        generateInvinciblePowerUp();
+                    }
+                    invinciblePowerUpRespawnTimeout = null;
+                    invinciblePowerUpRespawnEndTime = 0;
+                }, remainingTime);
+            } else {
+                // 暂停期间已经应该重生了
                 if (isPlaying && !isPaused) {
-                    spawnObstacles();
-                    scheduleObstacleRefresh();
+                    generateInvinciblePowerUp();
                 }
-                obstacleSpawnTimeout = null;
-            }, spawnDelay);
+                invinciblePowerUpRespawnEndTime = 0;
+            }
         }
 
         // 恢复无敌道具检查定时器
@@ -414,6 +627,11 @@ function generateFood() {
     // 30%概率生成双倍食物（如果当前没有双倍食物）
     if (!bonusFood && Math.random() < BONUS_FOOD_SPAWN_CHANCE) {
         generateBonusFood();
+    }
+
+    // 15%概率生成彩虹方块（如果当前没有彩虹方块且游戏未暂停）
+    if (!rainbowFood && !isPaused && Math.random() < RAINBOW_FOOD_SPAWN_CHANCE) {
+        generateRainbowFood();
     }
 
     // 8%概率生成无敌道具（如果当前没有道具）
@@ -512,6 +730,70 @@ function generateInvinciblePowerUp() {
     }
 }
 
+// 生成彩虹方块
+function generateRainbowFood(attempts = 0) {
+    const maxAttempts = 100;
+    if (attempts >= maxAttempts) {
+        console.warn('无法为彩虹方块找到合适位置');
+        return;
+    }
+
+    let newRainbowFood = {
+        x: Math.floor(Math.random() * GRID_SIZE),
+        y: Math.floor(Math.random() * GRID_SIZE),
+        spawnTime: Date.now()
+    };
+
+    // 确保彩虹方块不在普通食物位置
+    if (newRainbowFood.x === food.x && newRainbowFood.y === food.y) {
+        generateRainbowFood(attempts + 1);
+        return;
+    }
+
+    // 确保彩虹方块不在双倍食物位置
+    if (bonusFood && newRainbowFood.x === bonusFood.x && newRainbowFood.y === bonusFood.y) {
+        generateRainbowFood(attempts + 1);
+        return;
+    }
+
+    // 确保彩虹方块不在无敌道具位置
+    if (invinciblePowerUp && newRainbowFood.x === invinciblePowerUp.x && newRainbowFood.y === invinciblePowerUp.y) {
+        generateRainbowFood(attempts + 1);
+        return;
+    }
+
+    // 确保彩虹方块不在蛇身上
+    for (let segment of snake) {
+        if (segment.x === newRainbowFood.x && segment.y === newRainbowFood.y) {
+            generateRainbowFood(attempts + 1);
+            return;
+        }
+    }
+
+    // 确保彩虹方块不在障碍物位置
+    for (let obstacle of obstacles) {
+        if (obstacle.x === newRainbowFood.x && obstacle.y === newRainbowFood.y) {
+            generateRainbowFood(attempts + 1);
+            return;
+        }
+    }
+
+    // 确保彩虹方块不在即将生成的障碍物位置
+    for (let upcomingObstacle of upcomingObstacles) {
+        if (upcomingObstacle.x === newRainbowFood.x && upcomingObstacle.y === newRainbowFood.y) {
+            generateRainbowFood(attempts + 1);
+            return;
+        }
+    }
+
+    rainbowFood = newRainbowFood;
+
+    // 启动检查彩虹方块超时的定时器
+    if (!rainbowFoodCheckInterval) {
+        rainbowFoodCheckInterval = setInterval(checkRainbowFoodTimeout, 500);
+    }
+}
+
 // 生成障碍物
 function generateObstacles() {
     obstacles = [];
@@ -552,6 +834,9 @@ function generateSingleObstacle() {
 
         // 检查是否在双倍食物位置
         if (bonusFood && pos.x === bonusFood.x && pos.y === bonusFood.y) continue;
+
+        // 检查是否在彩虹方块位置
+        if (rainbowFood && pos.x === rainbowFood.x && pos.y === rainbowFood.y) continue;
 
         // 检查是否在无敌道具位置
         if (invinciblePowerUp && pos.x === invinciblePowerUp.x && pos.y === invinciblePowerUp.y) continue;
@@ -603,16 +888,29 @@ function spawnObstacles() {
 
 // 调度下次障碍物刷新
 function scheduleObstacleRefresh() {
+    // 在设置新的定时器前，先清除旧定时器
+    if (obstacleRefreshTimeout) {
+        clearTimeout(obstacleRefreshTimeout);
+        obstacleRefreshTimeout = null;
+    }
+    if (obstacleWarningTimeout) {
+        clearTimeout(obstacleWarningTimeout);
+        obstacleWarningTimeout = null;
+    }
+
     const refreshInterval = OBSTACLE_CONFIG[currentDifficulty].refreshInterval;
     obstacleNextRefreshTime = Date.now() + refreshInterval;
     const warningDelay = refreshInterval - OBSTACLE_WARNING_TIME;
 
     // 先调度警告显示
     if (warningDelay > 0) {
-        setTimeout(() => {
+        obstacleWarningEndTime = Date.now() + warningDelay;
+        obstacleWarningTimeout = setTimeout(() => {
             if (isPlaying && !isPaused) {
                 showObstacleWarning();
             }
+            obstacleWarningTimeout = null;
+            obstacleWarningEndTime = 0;
         }, warningDelay);
     }
 
@@ -662,11 +960,35 @@ function checkBonusFoodTimeout() {
         // 超时后尝试重新生成双倍食物
         if (isPlaying && !isPaused) {
             const respawnDelay = Math.random() * (BONUS_FOOD_RESPAWN_MAX_DELAY - BONUS_FOOD_RESPAWN_MIN_DELAY) + BONUS_FOOD_RESPAWN_MIN_DELAY;
+            bonusFoodRespawnEndTime = Date.now() + respawnDelay;
             bonusFoodRespawnTimeout = setTimeout(() => {
                 if (isPlaying && !isPaused && !bonusFood) {
                     generateBonusFood();
                 }
                 bonusFoodRespawnTimeout = null;
+                bonusFoodRespawnEndTime = 0;
+            }, respawnDelay);
+        }
+    }
+}
+
+// 检查彩虹方块是否超时
+function checkRainbowFoodTimeout() {
+    if (rainbowFood && Date.now() - rainbowFood.spawnTime > RAINBOW_FOOD_DURATION) {
+        rainbowFood = null;
+        clearInterval(rainbowFoodCheckInterval);
+        rainbowFoodCheckInterval = null;
+
+        // 超时后尝试重新生成彩虹方块
+        if (isPlaying && !isPaused) {
+            const respawnDelay = Math.random() * (RAINBOW_FOOD_RESPAWN_MAX_DELAY - RAINBOW_FOOD_RESPAWN_MIN_DELAY) + RAINBOW_FOOD_RESPAWN_MIN_DELAY;
+            rainbowFoodRespawnEndTime = Date.now() + respawnDelay;
+            rainbowFoodRespawnTimeout = setTimeout(() => {
+                if (isPlaying && !isPaused && !rainbowFood) {
+                    generateRainbowFood();
+                }
+                rainbowFoodRespawnTimeout = null;
+                rainbowFoodRespawnEndTime = 0;
             }, respawnDelay);
         }
     }
@@ -682,11 +1004,13 @@ function checkInvinciblePowerUpTimeout() {
         // 超时后尝试重新生成道具
         if (isPlaying && !isPaused) {
             const respawnDelay = Math.random() * (POWER_UP_CONFIG.respawnMaxDelay - POWER_UP_CONFIG.respawnMinDelay) + POWER_UP_CONFIG.respawnMinDelay;
+            invinciblePowerUpRespawnEndTime = Date.now() + respawnDelay;
             invinciblePowerUpRespawnTimeout = setTimeout(() => {
                 if (isPlaying && !isPaused && !invinciblePowerUp) {
                     generateInvinciblePowerUp();
                 }
                 invinciblePowerUpRespawnTimeout = null;
+                invinciblePowerUpRespawnEndTime = 0;
             }, respawnDelay);
         }
     }
@@ -742,6 +1066,25 @@ function update() {
         bonusFood = null;
         clearInterval(bonusFoodCheckInterval);
         bonusFoodCheckInterval = null;
+        if (bonusFoodRespawnTimeout) {
+            clearTimeout(bonusFoodRespawnTimeout);
+            bonusFoodRespawnTimeout = null;
+        }
+        bonusFoodRespawnEndTime = 0;
+        ateFood = true;
+    }
+
+    // 检查是否吃到彩虹方块
+    if (rainbowFood && head.x === rainbowFood.x && head.y === rainbowFood.y) {
+        score += RAINBOW_FOOD_SCORE;
+        rainbowFood = null;
+        clearInterval(rainbowFoodCheckInterval);
+        rainbowFoodCheckInterval = null;
+        if (rainbowFoodRespawnTimeout) {
+            clearTimeout(rainbowFoodRespawnTimeout);
+            rainbowFoodRespawnTimeout = null;
+            rainbowFoodRespawnEndTime = 0;
+        }
         ateFood = true;
     }
 
@@ -757,6 +1100,7 @@ function update() {
             clearTimeout(invinciblePowerUpRespawnTimeout);
             invinciblePowerUpRespawnTimeout = null;
         }
+        invinciblePowerUpRespawnEndTime = 0;
 
         // 启动无敌状态检查定时器
         if (!invincibleStatusCheckInterval) {
@@ -815,6 +1159,16 @@ function gameOver() {
     if (bonusFoodRespawnTimeout) {
         clearTimeout(bonusFoodRespawnTimeout);
         bonusFoodRespawnTimeout = null;
+        bonusFoodRespawnEndTime = 0;
+    }
+    if (rainbowFoodCheckInterval) {
+        clearInterval(rainbowFoodCheckInterval);
+        rainbowFoodCheckInterval = null;
+    }
+    if (rainbowFoodRespawnTimeout) {
+        clearTimeout(rainbowFoodRespawnTimeout);
+        rainbowFoodRespawnTimeout = null;
+        rainbowFoodRespawnEndTime = 0;
     }
     if (obstacleRefreshTimeout) {
         clearTimeout(obstacleRefreshTimeout);
@@ -839,6 +1193,7 @@ function gameOver() {
     if (invinciblePowerUpRespawnTimeout) {
         clearTimeout(invinciblePowerUpRespawnTimeout);
         invinciblePowerUpRespawnTimeout = null;
+        invinciblePowerUpRespawnEndTime = 0;
     }
     isPlaying = false;
     isPaused = false;
@@ -1129,6 +1484,11 @@ function draw() {
         drawBonusFood();
     }
 
+    // 绘制彩虹方块（彩虹渐变效果）
+    if (rainbowFood) {
+        drawRainbowFood();
+    }
+
     // 绘制无敌道具
     if (invinciblePowerUp) {
         drawInvinciblePowerUp();
@@ -1187,6 +1547,84 @@ function drawBonusFood() {
         '2x',
         bonusFood.x * CELL_SIZE + CELL_SIZE / 2,
         bonusFood.y * CELL_SIZE + CELL_SIZE / 2
+    );
+}
+
+// 绘制彩虹方块
+function drawRainbowFood() {
+    const time = Date.now();
+    const centerX = rainbowFood.x * CELL_SIZE + CELL_SIZE / 2;
+    const centerY = rainbowFood.y * CELL_SIZE + CELL_SIZE / 2;
+
+    // 计算彩虹渐变相位（基于时间产生流动效果）
+    const hueOffset = (time / 20) % 360; // 每20ms色相旋转1度
+
+    // 预计算所有需要的HSL颜色值，减少重复计算
+    const hue1 = (hueOffset + 90) % 360;
+    const hue2 = (hueOffset + 180) % 360;
+    const hue3 = (hueOffset + 270) % 360;
+
+    // 绘制光晕效果（彩虹色）
+    for (let i = 5; i >= 1; i--) {
+        const hue = (hueOffset + i * 30) % 360;
+        ctx.beginPath();
+        ctx.arc(
+            centerX,
+            centerY,
+            CELL_SIZE / 2 + i,
+            0,
+            Math.PI * 2
+        );
+        ctx.fillStyle = `hsla(${hue}, 80%, 60%, ${0.15 / i})`;
+        ctx.fill();
+    }
+
+    // 绘制彩虹方块主体（渐变填充）
+    const gradient = ctx.createRadialGradient(
+        centerX - 2, centerY - 2, 0,
+        centerX, centerY, CELL_SIZE / 2 - 2
+    );
+    gradient.addColorStop(0, `hsl(${hueOffset}, 90%, 75%)`);
+    gradient.addColorStop(0.5, `hsl(${hue1}, 90%, 70%)`);
+    gradient.addColorStop(1, `hsl(${hue2}, 90%, 65%)`);
+
+    ctx.beginPath();
+    ctx.arc(
+        centerX,
+        centerY,
+        CELL_SIZE / 2 - 2,
+        0,
+        Math.PI * 2
+    );
+    ctx.fillStyle = gradient;
+    ctx.fill();
+
+    // 绘制边框（彩虹色）
+    ctx.strokeStyle = `hsl(${hue3}, 90%, 60%)`;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // 绘制内圈高光
+    ctx.beginPath();
+    ctx.arc(
+        centerX - 3,
+        centerY - 3,
+        CELL_SIZE / 5,
+        0,
+        Math.PI * 2
+    );
+    ctx.fillStyle = `hsla(${hueOffset}, 90%, 90%, 0.8)`;
+    ctx.fill();
+
+    // 绘制"★"星星标识
+    ctx.fillStyle = `hsl(${hue2}, 90%, 50%)`;
+    ctx.font = 'bold 12px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(
+        '★',
+        centerX,
+        centerY
     );
 }
 
